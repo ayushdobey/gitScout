@@ -55,7 +55,8 @@ export function CodebaseAssistant({ repoId = "flask", repoName = "pallets/flask"
 
     try {
       const token = typeof window !== 'undefined' ? sessionStorage.getItem('gs_token') : null;
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const rawApiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const apiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;

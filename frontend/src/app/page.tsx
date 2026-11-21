@@ -24,7 +24,8 @@ import {
   GitBranch,
 } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const rawApiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = rawApiBase.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
 const API = `${API_BASE}/api/v1`;
 
 function authHeaders(token: string) {

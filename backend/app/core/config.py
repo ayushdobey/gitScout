@@ -1,5 +1,6 @@
 from typing import List
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,11 +18,23 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
-    # Database
-    DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/gitscout"
+    # Database (Defaults to zero-dependency SQLite; automatically uses PostgreSQL when DATABASE_URL is set)
+    DATABASE_URL: str = "sqlite:///./gitscout.db"
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_url(cls, v: str | None) -> str:
+        if not v or v.strip() == "":
+            return "sqlite:///./gitscout.db"
+        # Fix Render/Heroku legacy postgres:// scheme for SQLAlchemy 2.0
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+psycopg2://", 1)
+        if v.startswith("postgresql://") and not v.startswith("postgresql+psycopg2://"):
+            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return v
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [

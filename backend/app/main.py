@@ -1,8 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app.models  # noqa: F401 - ensure all ORM models are registered
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.database import Base, engine
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ensure database schema is initialized on boot
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -10,7 +22,8 @@ app = FastAPI(
     description="GitScout: AI-Powered GitHub Repository Intelligence Platform API",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
 
 # Cross-Origin Resource Sharing (CORS) setup
