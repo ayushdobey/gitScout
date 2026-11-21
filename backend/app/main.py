@@ -12,7 +12,11 @@ from app.core.database import Base, engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure database schema is initialized on boot
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Database auto-creation encountered notice: {exc}")
     yield
 
 

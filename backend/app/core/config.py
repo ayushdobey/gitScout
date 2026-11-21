@@ -27,7 +27,12 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_url(cls, v: str | None) -> str:
+        import os
+        # Fall back to zero-config SQLite if unset or if pointing to unreachable localhost in cloud/Render
+        is_cloud = bool(os.environ.get("RENDER") or os.environ.get("VERCEL") or os.environ.get("PORT"))
         if not v or v.strip() == "":
+            return "sqlite:///./gitscout.db"
+        if is_cloud and ("localhost" in v or "127.0.0.1" in v):
             return "sqlite:///./gitscout.db"
         # Fix Render/Heroku legacy postgres:// scheme for SQLAlchemy 2.0
         if v.startswith("postgres://"):
