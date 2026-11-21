@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: gitscout-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gitscout}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gitscout_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-gitscout_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gitscout} -d ${POSTGRES_DB:-gitscout_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gitscout-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gitscout}:${POSTGRES_PASSWORD:-gitscout_secret}@postgres:5432/${POSTGRES_DB:-gitscout_db}
+      SECRET_KEY: ${SECRET_KEY:-gitscout-production-secret-change-in-env-file}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gitscout-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
+

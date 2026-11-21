@@ -1,0 +1,13 @@
+line-length = 140
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "B008",  # Allow FastAPI Depends() in argument defaults
+    "B904",  # Exception chaining
+    "B905",  # zip() without strict
+    "E501",  # Line length handled gracefully
+    "UP006", # Allow typing.List / Dict
+    "UP035", # Allow typing.List / Dict imports
+]

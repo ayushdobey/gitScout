@@ -1,0 +1,5 @@
+# AI, Embeddings & RAG (Phase 4)
+sentence-transformers>=2.6.1
+google-generativeai>=0.4.1
+openai>=1.14.0
+
